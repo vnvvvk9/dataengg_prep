@@ -14,15 +14,16 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "95a03b00-e632-4470-a2a0-5cda6e23f445"
+				"spark.autotune.trackingId": "9831597d-cad1-4135-9611-a6179a9b148e"
 			}
 		},
 		"metadata": {
 			"saveOutput": true,
-			"synapse_widget": {
-				"version": "0.1"
-			},
 			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "python"
+			},
 			"language_info": {
 				"name": "python"
 			},
@@ -32,8 +33,44 @@
 			{
 				"cell_type": "code",
 				"source": [
+					"# Install the Azure Event Hub library if necessary\n",
+					"%pip install azure-eventhub\n",
+					"\n",
+					"from azure.identity import DefaultAzureCredential\n",
+					"from azure.eventhub import EventHubProducerClient, EventData\n",
+					"import json\n",
+					"\n",
+					"# Define your Event Hub parameters\n",
+					"event_hub_name = \"<Your Event Hub name>\"\n",
+					"event_hub_namespace = \"<Your Event Hub namespace>\"\n",
+					"\n",
+					"# Create an Event Hub producer client using Managed Identity\n",
+					"credential = DefaultAzureCredential()\n",
+					"producer = EventHubProducerClient(\n",
+					"    fully_qualified_namespace=f\"{event_hub_namespace}.servicebus.windows.net\",\n",
+					"    eventhub_name=event_hub_name,\n",
+					"    credential=credential\n",
+					")\n",
+					"\n",
+					"# Create sample data to send to Event Hub\n",
+					"data = [\n",
+					"    {\"transaction_id\": \"12345\", \"amount\": 450.50, \"merchant\": \"Amazon\"},\n",
+					"    {\"transaction_id\": \"12346\", \"amount\": 200.00, \"merchant\": \"eBay\"},\n",
+					"]\n",
+					"\n",
+					"# Publish data to Event Hub\n",
+					"with producer:\n",
+					"    event_data_batch = producer.create_batch()\n",
+					"    \n",
+					"    for transaction in data:\n",
+					"        event_data_batch.add(EventData(json.dumps(transaction)))\n",
+					"        \n",
+					"    producer.send_batch(event_data_batch)\n",
+					"\n",
+					"print(\"Data sent to Event Hub successfully!\")\n",
 					""
-				]
+				],
+				"execution_count": null
 			}
 		]
 	}
